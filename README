@@ -1,0 +1,4 @@
+libnessh - an easy parallel SSH library for C++
+
+Building:
+./install.sh
