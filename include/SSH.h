@@ -16,7 +16,7 @@ public:
 	void disconnect();
 	bool command(const std::string& command, bool output_file = false, bool output_vector = false);
 	bool transferLocal(const std::string& from, const std::string& to, const std::string& custom_filename);
-	bool transferRemote(const std::string& from, const std::string& to);
+	bool transferRemote(const std::string& from, const std::string& to, bool overwrite = true);
 	
 	void clearOutput();
 	std::vector<std::string> getOutput();
@@ -24,6 +24,8 @@ public:
 	bool operator==(const std::string& ip);
 	
 private:
+	bool fileExists(const std::string& path, const std::string& filename);
+	
 	std::string ip_;
 	std::string user_;
 	std::string pass_;

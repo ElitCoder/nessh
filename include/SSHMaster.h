@@ -23,10 +23,9 @@ public:
 	bool connect(const std::vector<std::string>& ips, const std::string& pass);
 	bool connect(const std::vector<std::string>& ips, const std::vector<std::string>& users, const std::vector<std::string>& passwords);
 	std::vector<bool> connectResult(const std::vector<std::string>& ips, const std::string& pass);
-	bool command(std::vector<std::string>& ips, std::vector<std::string>& commands);
 	std::vector<std::pair<std::string, std::vector<std::string>>> command(const std::vector<std::string>& ips, const std::vector<std::string>& commands);
 	bool transferLocal(const std::vector<std::string>& ips, const std::vector<std::string>& from, const std::vector<std::string>& to, bool threading);
-	bool transferRemote(const std::vector<std::string>& ips, const std::vector<std::string>& from, const std::vector<std::string>& to);
+	bool transferRemote(const std::vector<std::string>& ips, const std::vector<std::string>& from, const std::vector<std::string>& to, bool overwrite = true);
 	
 	void setSetting(int setting, bool value);
 	bool getSetting(int setting);

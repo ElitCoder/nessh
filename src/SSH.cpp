@@ -6,6 +6,8 @@
 #include <chrono>
 
 #include <sys/stat.h>
+#include <libssh/sftp.h>
+#include <fcntl.h>
 
 #define ERROR(...)	do { fprintf(stderr, "Error: "); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); exit(1); } while(0)
 
@@ -84,7 +86,35 @@ static size_t getFileSize(string& filename) {
 	return size;
 }
 
-bool SSH::transferRemote(const string& from, const string& to) {
+bool SSH::fileExists(const string& path, const string& filename) {
+	sftp_session sftp = sftp_new(session_);
+	
+	if (sftp == NULL) {
+		cout << "ERROR: Allocating SFTP session: " << ssh_get_error(session_) << endl;
+		
+		return false;
+	}
+	
+	if (sftp_init(sftp) != SSH_OK) {
+		cout << "ERROR: Initializing SFTP session: " << sftp_get_error(sftp) << endl;
+		
+		sftp_free(sftp);
+		return false;
+	}
+	
+	sftp_file file = sftp_open(sftp, (path + filename).c_str(), O_RDONLY, 0);
+	bool result = false;
+	
+	if (file != NULL) {
+		sftp_close(file);
+		result = true;
+	}
+	
+	sftp_free(sftp);
+	return result;
+}
+
+bool SSH::transferRemote(const string& from, const string& to, bool overwrite) {
 	if (!connected_) {
 		cout << "Warning: can't read from SCP without an active SSH connection\n";
 		
@@ -109,6 +139,14 @@ bool SSH::transferRemote(const string& from, const string& to) {
 	vector<string> files = splitString(from, ' ');
 	
 	for (auto& filename : files) {
+		string remote_file = getFilenameFromPath(filename);
+		
+		// Check if the file already exists
+		if (!overwrite) {
+			if (fileExists(to, remote_file))
+				continue;
+		}
+		
 		ifstream file(filename);
 		
 		if (!file.is_open()) {
@@ -123,7 +161,6 @@ bool SSH::transferRemote(const string& from, const string& to) {
 		char* file_buffer = new char[FILE_BUFFER_SIZE];
 		
 		size_t file_size = getFileSize(filename);
-		string remote_file = getFilenameFromPath(filename);
 
 		if (ssh_scp_push_file(scp, remote_file.c_str(), file_size, S_IRWXU) != SSH_OK) {
 			cout << "Warning: could not push file to remote host with RWX\n";

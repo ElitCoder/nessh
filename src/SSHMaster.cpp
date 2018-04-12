@@ -135,9 +135,9 @@ bool SSHMaster::transferLocal(const vector<string>& ips, const vector<string>& f
 	}
 }
 
-static void transferRemoteThreaded(SSHMaster& connections, const string& ip, const string& from, const string& to) {
+static void transferRemoteThreaded(SSHMaster& connections, const string& ip, const string& from, const string& to, bool overwrite) {
 	auto& session = connections.getSession(ip, true);
-	bool result = session.transferRemote(from, to);
+	bool result = session.transferRemote(from, to, overwrite);
 	
 	if (result)
 		return;
@@ -145,7 +145,7 @@ static void transferRemoteThreaded(SSHMaster& connections, const string& ip, con
 	connections.setThreadedConnectionStatus(false);
 }
 
-bool SSHMaster::transferRemote(const vector<string>& ips, const vector<string>& from, const vector<string>& to) {
+bool SSHMaster::transferRemote(const vector<string>& ips, const vector<string>& from, const vector<string>& to, bool overwrite) {
 	if (ips.empty())
 		return false;
 		
@@ -154,7 +154,7 @@ bool SSHMaster::transferRemote(const vector<string>& ips, const vector<string>& 
 	thread* threads = new thread[ips.size()];
 	
 	for (size_t i = 0; i < ips.size(); i++)
-		threads[i] = thread(transferRemoteThreaded, ref(*this), ref(ips.at(i)), ref(from.at(i)), ref(to.at(i)));
+		threads[i] = thread(transferRemoteThreaded, ref(*this), ref(ips.at(i)), ref(from.at(i)), ref(to.at(i)), overwrite);
 		
 	for (size_t i = 0; i < ips.size(); i++)
 		threads[i].join();
@@ -298,23 +298,4 @@ vector<pair<string, vector<string>>> SSHMaster::command(const vector<string>& ip
 	for_each(ips.begin(), ips.end(), [this, &outputs] (const string& ip) { outputs.push_back({ ip, getSession(ip, false).getOutput() }); });
 	
 	return outputs;
-}
-
-bool SSHMaster::command(vector<string>& ips, vector<string>& commands) {
-	if (ips.empty())
-		return false;
-		
-	threaded_connections_result_ = true;
-		
-	thread* threads = new thread[ips.size()];
-			
-	for (size_t i = 0; i < ips.size(); i++)
-		threads[i] = thread(commandThreaded, ref(*this), ref(ips.at(i)), ref(commands.at(i)));
-		
-	for (size_t i = 0; i < ips.size(); i++)
-		threads[i].join();
-		
-	delete[] threads;
-	
-	return threaded_connections_result_;
 }
