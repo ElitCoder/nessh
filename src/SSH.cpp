@@ -361,6 +361,12 @@ static string getTimestamp() {
 }
 
 bool SSH::command(const string& command, bool output_file, bool output_vector) {
+	if (output_file && output_vector) {
+		cout << "Warning: don't have both vector and file style outputs enabled, there will be problems.\n";
+		
+		return false;
+	}
+	
 	if (!connected_) {
 		cout << "Error: could not execute command, we're not connected\n";
 		
@@ -390,53 +396,46 @@ bool SSH::command(const string& command, bool output_file, bool output_vector) {
 		return false;
 	}
 	
-	if (output_file || output_vector) {
-		ofstream* file = nullptr;
+	ofstream* file = nullptr;
+	
+	if (output_file) {
+		string filename = "stdout_" + ip_;
+		file = new ofstream(filename, ios_base::app);
 		
-		if (output_file) {
-			string filename = "stdout_" + ip_;
-			file = new ofstream(filename, ios_base::app);
-			
-			if (!file->is_open()) {
-				delete file;
-				
-				goto end;
-			}
-			
-			//cout << "Debug: writing to log\n";
-			
-			string current_time = getTimestamp();
-			
-			file->write("[", 1);
-			file->write(current_time.c_str(), current_time.length() - 1);
-			file->write("]\n", 2);
-		} else {
-			//cout << "Debug: writing to vector\n";
-			output_.clear();
-		}
-
-		char buffer[256];
-		
-		for (size_t i = 0; i <= 1; i++) {
-			do {
-				int bytes_received = ssh_channel_read(channel, buffer, sizeof(buffer), i);
-				
-				if (bytes_received <= 0)
-					break;
-					
-				//cout << "Debug: read " << bytes_received << " bytes from remote\n";
-				
-				if (output_file)
-					file->write(buffer, bytes_received);
-				else
-					output_.push_back(string(buffer, bytes_received));
-			} while (true);
-		}
-		
-		if (output_file) {
-			file->close();
+		if (!file->is_open()) {
 			delete file;
+			
+			goto end;
 		}
+		
+		string current_time = getTimestamp();
+		
+		file->write("[", 1);
+		file->write(current_time.c_str(), current_time.length() - 1);
+		file->write("]\n", 2);
+	} else if (output_vector) {
+		output_.clear();
+	}
+	
+	char buffer[256];
+	
+	for (size_t i = 0; i <= 1; i++) {
+		do {
+			int bytes_received = ssh_channel_read(channel, buffer, sizeof(buffer), i);
+			
+			if (bytes_received <= 0)
+				break;
+			
+			if (output_file)
+				file->write(buffer, bytes_received);
+			else if (output_vector)
+				output_.push_back(string(buffer, bytes_received));
+		} while (true);
+	}
+	
+	if (output_file) {
+		file->close();
+		delete file;
 	}
 	
 end:
