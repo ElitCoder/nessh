@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # install dependencies (debian-based)
-sudo apt-get update && sudo apt-get install libssl-dev
+sudo apt-get update && sudo apt-get install g++ libssl-dev
 
 # number of cores available
 cores=`grep --count ^processor /proc/cpuinfo`
