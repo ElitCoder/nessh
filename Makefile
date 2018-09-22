@@ -7,7 +7,7 @@ CC_FLAGS	:= -std=c++11 -Wall -Wextra -pedantic-errors
 CC_FLAGS	+= -O3
 CC_FLAGS	+= -fPIC
 CC_FLAGS	+= -I./include/
-LD_LIBS		:= -lssh -lssh_threads
+LD_LIBS		:= -lssh
 
 LIB_TYPE	:= -shared
 TARGET		:= libnessh.so
@@ -28,6 +28,6 @@ build: $(OBJ_FILES)
 
 obj/%.o: src/%.cpp
 	g++ $(CC_FLAGS) -c -o $@ $<
-	
+
 CC_FLAGS += -MMD
 -include $(OBJFILES:.o=.d)

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# install dependencies (debian-based)
+# install dependencies (apt)
 sudo apt-get update && sudo apt-get install g++ libssh-dev
 
 # number of cores available

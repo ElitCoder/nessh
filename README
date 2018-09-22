@@ -1,4 +1,5 @@
 libnessh - an easy parallel SSH library for C++
 
 Building:
-./install.sh
+apt (Debian): ./install_apt.sh
+pacman (Arch): ./install_pacman.sh
